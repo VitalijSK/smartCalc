@@ -7,164 +7,107 @@ class SmartCalculator {
       this.priors = [];
       this.priors.push({
           valueA : 0,
-          valueB: 0,
-          sing : this.addTwo,
+          valueB: initialValue,
+          sing : (a, b)=> {
+            return a + b;
+            },
           prior : 1
       });
 
     }
   
     add(number) {
-      const prior = 1;
-      if (prior >= this.prior) {
-          this.priors.push({
-              valueA : this.last,
-              valueB: number,
-              sing : this.addTwo,
-              prior : prior
-          });
-        
-      } else {
-          this.getValue();
-             const calc = this.priors.pop();
-              calc.valueB = number;
-        calc.sing = this.addTwo;
-              this.priors.push(calc);
+        const prior = 1;
+        const oper = (a, b)=> {
+           return a + b;
+        }
+  
+        return this.getObj (prior, number, oper);
+      }
       
+      subtract(number) {
+        const prior = 1;
+        number *= -1;
+        const oper = (a, b)=> {
+          return a + b;
+       }
+  
+        return this.getObj (prior, number, oper);
       }
-      this.prior = prior;
-      this.last = number;
-      return this;
-    }
     
-    subtract(number) {
-      const prior = 1;
-      number *= -1;
-      if (prior >= this.prior) {
-          this.priors.push({
-              valueA : this.last,
-              valueB: number,
-              sing : this.addTwo,
-              prior : prior
-          });
-      } else {
-          this.getValue();
-             const calc = this.priors.pop();
-              calc.valueB = number;
-           calc.sing = this.addTwo;
-              this.priors.push(calc);
-
-      }
-      this.prior = prior;
-      this.last = number;
-      return this;
-    }
+      multiply(number) {
+        const prior = 2;
+        const oper = (a, b)=> {
+          return a * b;
+       }
   
-    multiply(number) {
-      const prior = 2;
-      if (prior >= this.prior) {
-          this.priors.push({
-              valueA : this.last,
-              valueB: number,
-              sing : this.mulTwo,
-              prior : prior
-          });
-       } else {
-                    this.getValue();
-             const calc = this.priors.pop();
-               calc.sing = this.mulTwo;
-              calc.valueB = number;
-              this.priors.push(calc);
-         
-            
+        return this.getObj (prior, number, oper);
       }
-      this.prior = prior;
-      this.last = number;
-      return this;
-    }
+    
+      devide(number) {
+        const prior = 2;
+        const oper = (a, b)=> {
+          return a / b;
+       }
   
-    devide(number) {
-      const prior = 2;
-      if (prior >= this.prior) {
-          this.priors.push({
-              valueA : this.last,
-              valueB: number,
-              sing : this.divTwo,
-              prior : prior
-          });
-      } else {
-               this.getValue();
-             const calc = this.priors.pop();
-        calc.sing = this.divTwo;
-              calc.valueB = number;
-              this.priors.push(calc);
-
+        return this.getObj (prior, number, oper);
       }
-      this.prior = prior;
-      this.last = number;
-      return this;
-    }
-  
-    pow(number) {
-      const prior = 3;
-      if (prior >= this.prior) {
-          this.priors.push({
-              valueA : this.last,
-              valueB: number,
-              sing : this.powTwo,
-              prior : prior
-          });
-          this.prior = prior;
-          this.last = number;
-      } else {
-          this.getValue();
-          this.value = this.powTwo(this.last, number);
-     
+    
+      pow(number) {
+        const prior = 3;
+        const oper = (a, b)=> {
+          if(a < 0 && b % 2 === 0) {
+              return Math.pow(a, b) * -1;
+            }
+            return Math.pow(a, b);
+       }
+        return this.getObj (prior, number, oper);
       }
-      this.prior = prior;
-      this.last = number;
-      return this;
-    }
-    getValue() {
+    getValue(number, prior, oper) {
       if(this.priors.length === 0) {
           this.value;
           return;
       }
+
       while(this.priors.length > 1) {
           const calc = this.priors.pop();
+          if (calc.prior <= prior) {
+              this.priors.push(calc);
+              break;
+          }
           const calcTmp = this.priors.pop();
           calcTmp.valueB = calc.sing(calc.valueA, calc.valueB);
           this.priors.push(calcTmp);
       }
       const calc = this.priors.pop();
-
-      this.value = calc.sing(calc.valueA, calc.valueB);
+      
+      this.value = calc.valueB;
+      this.priors.push(calc);
       this.priors.push({
-          valueA : this.value,
-          valueB: 0,
-          sing : this.addTwo,
-          prior : 1
-      });
-
+              valueA : calc.valueB,
+              valueB: number,
+              sing : oper,
+              prior : prior
+          });
+      
     }
-    addTwo(a , b) {
-        return a + b;
-    }
-    subTwo(a , b) {
-        return a - b;
-    }
-    mulTwo(a , b) {
-        return a * b;
-    }
-    divTwo(a , b) {
-        return a / b;
-    }
-    powTwo(a , b) {
-        if(a < 0) {
-          return Math.pow(a, b) * -1;
+    getObj (prior, number, oper) {
+        if (prior > this.prior) {
+            const calc = this.priors.pop();
+            this.priors.push(calc);
+            this.priors.push({
+                valueA : calc.valueB,
+                valueB: number,
+                sing : oper,
+                prior : prior
+            });
+            
+        } else {
+            this.getValue(number, prior, oper);
         }
-        return Math.pow(a, b);
-    }
+        this.prior = prior;
+        return this;
+    }    
     valueOf () {
       this.getValue();
       return this.value;
